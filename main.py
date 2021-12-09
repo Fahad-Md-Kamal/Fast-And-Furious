@@ -1,7 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 import requests
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -70,7 +70,42 @@ async def get_model(model_name: ModelName):
 @app.get("/items/")
 async def read_item(skip: int = 0, limit: int = 10):
     return fake_items_db[skip : skip + limit]
-    
+
+# @app.get("/read-items/")
+# async def read_items(q: Optional[str] = Query(..., max_length=50, min_length=3, regex="^fixedquery$")):
+#     results = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}]}
+#     if q:
+#         results.update({"q": q})
+#     return results
+
+
+# @app.get("/read-items/")
+# async def read_items(q: Optional[List[str]] = Query(None)):
+#     results = {"q": [{"item_id": "Foo"}, {"item_id": "Bar"}]}
+#     return results
+
+
+# @app.get("/read-items/")
+# async def read_items(q: Optional[List[str]] = Query(["foo", "bar"]), title="Query String", description="Query string for the items to search in the database that have a good match"):
+#     results = {"q": q}
+#     return results
+
+
+@app.get("/read-items/")
+async def read_items(q: Optional[List[str]] = Query(
+    None, 
+    alias="item-query", deprecated=True
+    )):
+    results = {"q": q}
+    return results
+
+
+# @app.get("/items/")
+# async def read_items(q: Optional[List[str]] = Query(None)):
+#     query_items = {"q": q}
+#     return query_items
+
+
 @app.get("/items/{item_id}/")
 async def read_item_detail(item_id: str, q: Optional[str] = None):
     if q:
@@ -93,5 +128,4 @@ async def read_user_needt_item(item_id: str, needy: str):
     item = {"item_id": item_id, "needy": needy}
     return item
 
-
-# Next Topic: https://fastapi.tiangolo.com/tutorial/query-params-str-validations/
+# https://fastapi.tiangolo.com/tutorial/path-params-numeric-validations/
