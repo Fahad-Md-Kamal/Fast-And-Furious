@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Body
 import requests
 from enum import Enum
-from typing import List, Optional
-from pydantic import BaseModel
+from typing import List, Optional, Set, Dict
+from pydantic import BaseModel, Field, HttpUrl
 
 app = FastAPI()
 
@@ -19,13 +19,62 @@ class ModelName(str, Enum):
     lenet = "lenet"
 
 
+class Image(BaseModel):
+    url: HttpUrl #= Field(..., example="http://127.0.0.1:8000/")
+    name: str #= Field(None, example="Facebook Profile Image")
+
+
 class Item(BaseModel):
-    name:str
-    description: Optional[str] = None
+    name: str
+    description: Optional[str] = Field(None, title="The description of the item", max_length=2000)
     price: float
     tax: Optional[float] = None
+    tags: Optional[List[str]] = None
+    image: Optional[List[Image]] = None
+
+    # class Config:
+    #     schema_extra = {
+    #         "example": {
+    #             "name": "Foo",
+    #             "description": "A very nice Item",
+    #             "price": 35.4,
+    #             "tax": 3.2,
+    #             "tags": [
+    #                 "tag 1",
+    #                 "tag 2"
+    #                 ],
+    #             "image": [
+    #                 {
+    #                     "url": "http://127.0.0.1:8000",
+    #                     "name": "example image"
+    #                 }
+    #             ]
+    #         }
+    #     }
 
 
+class User(BaseModel):
+    username: str
+    full_name: Optional[str] = None
+
+class Offer(BaseModel):
+    name: str
+    description: Optional[str] = None
+    price: float
+    items: List[Item]
+
+@app.post("/images/multiple/")
+async def create_multiple_images(images: List[Image]):
+    return images
+
+@app.post("/offers/")
+async def create_offer(offer: Offer):
+    return offer
+
+@app.post("/index-weights/")
+async def create_index_weights(weights: Dict[int, float]):
+    return weights
+    
 @app.get("/")
 async def root():
     r = requests.get("https://api.dictionaryapi.dev/api/v2/entries/en/grave")
@@ -36,15 +85,47 @@ async def item_detail(id:int):
     return {"message": id}
 
 @app.post('/items/')
-async def create_item(item:Item):
+async def create_item(item:Item = Body(...,  examples={
+            "normal": {
+                "summary": "A normal example",
+                "description": "A **normal** item works correctly.",
+                "value": {
+                    "name": "Foo",
+                    "description": "A very nice Item",
+                    "price": 35.4,
+                    "tax": 3.2,
+                },
+            },
+            "converted": {
+                "summary": "An example with converted data",
+                "description": "FastAPI can convert price `strings` to actual `numbers` automatically",
+                "value": {
+                    "name": "Bar",
+                    "price": "35.4",
+                },
+            },
+            "invalid": {
+                "summary": "Invalid data is rejected with an error",
+                "value": {
+                    "name": "Baz",
+                    "price": "thirty five point four",
+                },
+            },
+        })):
     return item
 
-@app.put('/items/{item_id}')
-async def create_item(item_id: int, item:Item):
-    return {"item_id":item_id, **item.dict()}
+# @app.put('/items/{item_id}')
+# async def create_item(item_id: int, item:Item):
+#     return {"item_id":item_id, **item.dict()}
 
 @app.put("/items-q/{item_id}")
-async def create_item(item_id: int, item: Item, q: Optional[str] = None):
+async def create_item(item_id: int, item: Item =Body(..., 
+        example={
+            "name": "Foo",
+            "description": "A very nice Item",
+            "price": 35.4,
+            "tax": 3.2,
+        }), q: Optional[str] = None):
     # Request body + path + query parameters
     result = {"item_id": item_id, **item.dict()}
     if q:
@@ -85,10 +166,14 @@ async def read_item(skip: int = 0, limit: int = 10):
 #     return results
 
 
-# @app.get("/read-items/")
-# async def read_items(q: Optional[List[str]] = Query(["foo", "bar"]), title="Query String", description="Query string for the items to search in the database that have a good match"):
-#     results = {"q": q}
-#     return results
+@app.get("/read-items-title/")
+async def read_items_title(q: Optional[List[str]] = Query(["foo", "bar"], ), 
+    title="Enter a Query String", 
+    description="Query string for the items to search in the database that have a good match", 
+    size: float = Query(..., gt=0, lt=10.5)
+    ):
+    results = {"q": q, 'title':title, 'description': description, 'size': size}
+    return results
 
 
 @app.get("/read-items/")
@@ -128,4 +213,14 @@ async def read_user_needt_item(item_id: str, needy: str):
     item = {"item_id": item_id, "needy": needy}
     return item
 
-# https://fastapi.tiangolo.com/tutorial/path-params-numeric-validations/
+# @app.put("/item-user/{item_id}")
+# async def update_item(item_id: int, item: Item, user: User, importance: int = Body(...)):
+#     fake_items_db.append(item)
+#     results = {"item_id": item_id, "item": item, "user": user, 'importance': importance, "fk_items":fake_items_db}
+#     return results
+
+
+@app.put("/item-user/{item_id}")
+async def update_item(item_id: int, item: Item = Body(..., embed=True)):
+    results = {"item_id": item_id, "item": item}
+    return results
