@@ -1,8 +1,14 @@
-from fastapi import FastAPI, Query, Body
+from fastapi import (FastAPI, 
+Query, Body, 
+Cookie, Header, 
+Form, File, UploadFile, 
+responses, Request)
 import requests
 from enum import Enum
 from typing import List, Optional, Set, Dict
 from pydantic import BaseModel, Field, HttpUrl
+from uuid import UUID
+from datetime import datetime, time, timedelta
 
 app = FastAPI()
 
@@ -12,6 +18,22 @@ fake_items_db = [
     {"item_name": "Bar"}, 
     {"item_name": "Baz"}
     ]
+
+
+
+
+
+class UnicornException(Exception):
+    def __init__(self, name: str):
+        self.name = name
+
+
+@app.exception_handler(UnicornException)
+async def unicorn_exception_handler(request: Request, exc: UnicornException):
+    return responses.JSONResponse(
+        status_code=418,
+        content={"message": f"Oops! {exc.name} did something. There goes a rainbow..."},
+    )
 
 class ModelName(str, Enum):
     alexnet = "alexnet"
@@ -53,7 +75,13 @@ class Item(BaseModel):
     #     }
 
 
-class User(BaseModel):
+class UserIn(BaseModel):
+    username: str
+    password: str
+    full_name: Optional[str] = None
+
+
+class UserOut(BaseModel):
     username: str
     full_name: Optional[str] = None
 
@@ -62,6 +90,51 @@ class Offer(BaseModel):
     description: Optional[str] = None
     price: float
     items: List[Item]
+
+
+
+@app.get("/unicorns/{name}")
+async def read_unicorn(name: str):
+    if name == "yolo":
+        raise UnicornException(name=name)
+    return {"unicorn_name": name}
+
+
+@app.post("/files/")
+async def create_file(file: bytes = File(...)):
+    return {"file_size": len(file)}
+
+
+@app.post("/uploadfile/")
+async def create_upload_file(files: List[UploadFile] = File(...)):
+    return {"filename": [file.filename for file in files]}
+
+
+@app.post("/login/", summary="User's Login", description="Enter the Username and password that you have provided to access the account")
+async def login(username: str = Form(...), password: str = Form(...)):
+    return {"username": username}
+
+
+@app.put("/items/{item_id}")
+async def read_items(
+    item_id: UUID,
+    start_datetime: Optional[datetime] = Body(None),
+    end_datetime: Optional[datetime] = Body(None),
+    repeat_at: Optional[time] = Body(None),
+    process_after: Optional[timedelta] = Body(None),
+):
+    start_process = start_datetime + process_after
+    duration = end_datetime - start_process
+    return {
+        "item_id": item_id,
+        "start_datetime": start_datetime,
+        "end_datetime": end_datetime,
+        "repeat_at": repeat_at,
+        "process_after": process_after,
+        "start_process": start_process,
+        "duration": duration,
+    }
+
 
 @app.post("/images/multiple/")
 async def create_multiple_images(images: List[Image]):
@@ -76,13 +149,17 @@ async def create_index_weights(weights: Dict[int, float]):
     return weights
     
 @app.get("/")
-async def root():
+async def root(user_agent: Optional[str] = Header(None)):
     r = requests.get("https://api.dictionaryapi.dev/api/v2/entries/en/grave")
     return {"message": "Bismillahir Rahmanir Rahim", "resp":r.text}
 
 @app.get("/item/{id}")
-async def item_detail(id:int):
+async def item_detail(id:int = Cookie(None), ):
     return {"message": id}
+
+@app.post("/user/", response_model=UserOut)
+async def create_user(user: UserIn):
+    return user
 
 @app.post('/items/')
 async def create_item(item:Item = Body(...,  examples={
@@ -125,12 +202,37 @@ async def create_item(item_id: int, item: Item =Body(...,
             "description": "A very nice Item",
             "price": 35.4,
             "tax": 3.2,
-        }), q: Optional[str] = None):
-    # Request body + path + query parameters
+        }),
+        response_description = "The created Item",
+        q: Optional[str] = None):
+    """
+    Create an item with all the information:
+
+    - **name**: each item must have a name
+    - **description**: a long description
+    - **price**: required
+    - **tax**: if the item doesn't have tax, you can omit this
+    - **tags**: a set of unique tag strings for this item
+    """
     result = {"item_id": item_id, **item.dict()}
     if q:
         result.update({"q": q})
     return result
+
+
+@app.get("/items-tags/", tags=["items"])
+async def read_items():
+    return [{"name": "Foo", "price": 42}]
+
+
+@app.get("/users/", tags=["users"])
+async def read_users():
+    return [{"username": "johndoe"}]
+
+
+@app.get("/elements/", tags=["items"], deprecated=True)
+async def read_elements():
+    return [{"item_id": "Foo"}]
 
 @app.get("/users/me}")
 async def read_user_me():
