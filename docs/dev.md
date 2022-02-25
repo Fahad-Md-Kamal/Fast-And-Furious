@@ -79,7 +79,7 @@ async def create_post(post: Post):
 ```
 *So that dynamic ```id``` is not replaced by ```latest``` value from the URL.*
 
-- Return Valid Status code if an object is not found.
+### Valid Status code
 
 **Quarkey approach:**
 ```python
