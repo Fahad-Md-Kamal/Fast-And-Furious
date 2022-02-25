@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import FastAPI, status, HTTPException
+from fastapi import FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
 from random import randrange
 
@@ -21,8 +21,21 @@ my_posts = [
 ]
 
 
+def find_post(id):
+    """Return post contains the id"""
+    for p in my_posts:
+        if p['id'] == id:
+            return p
+
+
+def find_post_index(id: int):
+    """Return Index of the Matching post item."""
+    for idx, val in enumerate(my_posts):
+        if val['id'] == id:
+            return idx
+
+
 @app.post("/posts", status_code=status.HTTP_201_CREATED, tags=['POST'])
-# @app.post("/posts", tags=['POST'])
 async def create_post(post: Post):
     """Create Posts"""
     post_dict = post.dict()
@@ -45,14 +58,35 @@ async def get_latest_post():
 
 
 @app.get("/posts/{id}", tags=['POST'])
-# async def get_post(id:int, response: Response):
 async def get_post(id: int):
     """Return Single Post"""
-    for p in my_posts:
-        if p['id'] == id:
-            return {"data": p}
-        else:
-            # response.status_code = status.HTTP_404_NOT_FOUND
-            # return {"message" : f"Post with ID: {id} Not Found"}
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with ID: {id} Not Found")
+    post = find_post(id)
+    if post:
+        return {"data": post}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Post Not-Found")
+
+
+@app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT, tags=['POST'])
+async def delete_post(id: int):
+    """ Delete Post With The Given Id"""
+    index = find_post_index(id)
+    if index == None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Post Not-Found")
+    my_posts.pop(index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.put("/posts/{id}", status_code=status.HTTP_202_ACCEPTED, tags=['POST'])
+async def update_post(id: int, post: Post):
+    """Update a Post with the payload"""
+    index = find_post_index(id)  # Check if Post exists with the given id
+    if index == None:  # If not exists rais error
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Post Not-Found")
+    post_dict = post.dict()  # Convert the payload post to dictonary
+    post_dict['id'] = id  # Assign the post it to the converted dictionary
+    my_posts[index] = post_dict  # replace the post item in the list
+    return {"message": post_dict}

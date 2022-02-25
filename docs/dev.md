@@ -1,7 +1,8 @@
 ### FastAPI Blog App Dev Documentation
 
 
-### Part - One [Brows Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/885189adc7e261a41a52b3f600ca8c9c71d7c203)
+## Part - One [Brows Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/885189adc7e261a41a52b3f600ca8c9c71d7c203)
+ ### GET & POST
 - Basics of FastAPI
 - Basic GET and POST request
 
@@ -22,7 +23,8 @@ async def create_post(payload: dict=Body(...)):
     return {"new_post" : "Post Created Successfully"}
 ```
 
-### Part - Two [Brows Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ce621b2924ed8854e747c504dacbaf272642f795)
+## Part - Two [Brows Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ce621b2924ed8854e747c504dacbaf272642f795)
+### Stractured Data
 - Basic Data Model using Pydentic lib
 - Making Optional model field
 - Assining Default value to the model fild.
@@ -49,10 +51,9 @@ async def create_post(post:Post):
 ```
 
 ## Part - Three [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ba3ea47820f3509700574dfa691a04262a0d1a8a)
-
-- Return valid status code after object creation
-    - Import status package from fastapi module
-    - add "```status_code=status.HTTP_201_CREATED```" to the url decorator.
+### Related API Status Code
+- Import status package from fastapi module
+- add "```status_code=status.HTTP_201_CREATED```" to the url decorator.
 ```python
 from fastapi import FastAPI, status
 
@@ -66,17 +67,21 @@ async def create_post(post: Post):
 ```
 - Place the urls in perfect order hierarchy so that dynamic values do not replace an actual value of the request.
 
-This comes first.
+**This comes first.**
 ```python
 @app.get("/posts/latest", tags=['POST'])
 ```
-This comes later so that dynamic ```id``` is not replaced by ```latest``` value from the URL.
+**This comes later**
+
+
 ```python
 @app.get("/posts/{id}", tags=['POST'])
 ```
+*So that dynamic ```id``` is not replaced by ```latest``` value from the URL.*
 
 - Return Valid Status code if an object is not found.
-    - Quarkey approach:
+
+**Quarkey approach:**
 ```python
 @app.get("/posts/{id}", tags=['POST'])
 async def get_post(id:int, response: Response):
@@ -90,9 +95,11 @@ async def get_post(id:int, response: Response):
 
 ```
 
-- Instead a better approach:
-    - import ```HTTPException``` from the fastapi module
-    - ```raise HTTPException``` with related status code and detail message.
+
+
+**Preffered Approach**
+- import ```HTTPException``` from the fastapi module
+- ```raise HTTPException``` with related status code and detail message.
 ```py
 from fastapi import FastAPI, status, HTTPException
 
@@ -105,4 +112,60 @@ async def get_post(id: int):
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with ID: {id} Not Found")
+```
+
+## Part - Five [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+### Delete Item
+- Receive item ```ID``` to be deleted.
+- Check if item exist in the data set.
+- If exist delete it and send ```204``` status code.
+- Else raise ```HTTPException``` error.
+- To send related status code add ```status_code=status.HTTP_204_NO_CONTENT``` to the url decorator.
+
+```python
+
+def find_post_index(id: int):
+    """Return Index of the Matching post item."""
+    for idx, val in enumerate(my_posts):
+        if val['id'] == id:
+            return idx
+
+@app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT, tags=['POST'])
+async def delete_post(id: int):
+    """ Delete Post With The Given Id"""
+    index = find_post_index(id)
+    if index == None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Post Not-Found")
+    my_posts.pop(index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+```
+
+### Update Item
+- Receive Item ```id``` to be updated
+- Check if the item exists.
+- If exists get the index of the item.
+- Convert the payload data to dict.
+- Assign the given ID to the dict.
+- Replace the Item to the index position of the list.
+
+
+```python
+def find_post_index(id: int):
+    """Return Index of the Matching post item."""
+    for idx, val in enumerate(my_posts):
+        if val['id'] == id:
+            return idx
+
+@app.put("/posts/{id}", status_code=status.HTTP_202_ACCEPTED, tags=['POST'])
+async def update_post(id: int, post: Post):
+    """Update a Post with the payload"""
+    index = find_post_index(id) 
+    if index == None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Post Not-Found")
+    post_dict = post.dict()
+    post_dict['id'] = id
+    my_posts[index] = post_dict
+    return {"message": post_dict}
 ```
