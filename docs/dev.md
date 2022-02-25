@@ -48,7 +48,7 @@ async def create_post(post:Post):
     return {"data":"Post Created Successfully"}  
 ```
 
-## Part - Three [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+## Part - Three [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ba3ea47820f3509700574dfa691a04262a0d1a8a)
 
 - Return valid status code after object creation
     - Import status package from fastapi module
