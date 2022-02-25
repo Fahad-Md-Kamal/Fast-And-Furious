@@ -1,8 +1,12 @@
-### FastAPI Blog App Dev Documentation
-
+## FastAPI Blog App Dev Documentation
+<hr>
+<br>
+<br>
 
 ## Part - One [Brows Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/885189adc7e261a41a52b3f600ca8c9c71d7c203)
- ### GET & POST
+<hr> 
+
+### GET & POST
 - Basics of FastAPI
 - Basic GET and POST request
 
@@ -22,8 +26,13 @@ async def create_post(payload: dict=Body(...)):
 
     return {"new_post" : "Post Created Successfully"}
 ```
+<br>
+<br>
+<br>
 
 ## Part - Two [Brows Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ce621b2924ed8854e747c504dacbaf272642f795)
+<hr>
+
 ### Stractured Data
 - Basic Data Model using Pydentic lib
 - Making Optional model field
@@ -49,8 +58,13 @@ async def create_post(post:Post):
     print(post.dict())
     return {"data":"Post Created Successfully"}  
 ```
+<br>
+<br>
+<br>
 
 ## Part - Three [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ba3ea47820f3509700574dfa691a04262a0d1a8a)
+<hr>
+
 ### Related API Status Code
 - Import status package from fastapi module
 - add "```status_code=status.HTTP_201_CREATED```" to the url decorator.
@@ -79,10 +93,15 @@ async def create_post(post: Post):
 ```
 *So that dynamic ```id``` is not replaced by ```latest``` value from the URL.*
 
-- Return Valid Status code if an object is not found.
+<br>
+<br>
+
+### Return Valid Status code if an object is not found.
 
 **Quarkey approach:**
 ```python
+from fastapi import FastAPI, Response, status
+
 @app.get("/posts/{id}", tags=['POST'])
 async def get_post(id:int, response: Response):
     """Return Single Posts"""
@@ -94,8 +113,6 @@ async def get_post(id:int, response: Response):
             return {"message" : f"Post with ID: {id} Not Found"}
 
 ```
-
-
 
 **Preffered Approach**
 - import ```HTTPException``` from the fastapi module
@@ -113,8 +130,13 @@ async def get_post(id: int):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with ID: {id} Not Found")
 ```
+<br>
+<br>
+<br>
 
-## Part - Five [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+## Part - Four [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+<hr>
+
 ### Delete Item
 - Receive item ```ID``` to be deleted.
 - Check if item exist in the data set.
@@ -140,6 +162,9 @@ async def delete_post(id: int):
     my_posts.pop(index)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 ```
+<br>
+<br>
+<br>
 
 ### Update Item
 - Receive Item ```id``` to be updated
@@ -168,4 +193,59 @@ async def update_post(id: int, post: Post):
     post_dict['id'] = id
     my_posts[index] = post_dict
     return {"message": post_dict}
+```
+<br>
+<br>
+<br>
+
+## Part Five [Brows File]() 
+<hr>
+
+### Re-stracture Project Tree
+- Move The ```main.py``` file into the app folder.
+- In order to declare the app diractory as a module add an ```__init__.py```
+
+**To Run the Project now, Type**
+```bash
+uvicorn app.main:app --reload
+```
+
+### Connect to the database (e.g: PostGres)
+Install the Postgres Package
+```bash
+pip install psycopg2
+```
+
+- Import ```psycopg2``` for database connection.
+- Import ```RealDictCursor``` from ```psycopg2.extras``` to show the datafield as python dictionary
+- Connect to the database using while loop so that until the db is connected you can run the loop after a certain period.
+- User the ```sleep()``` function to loop connection if fails after a certain period.
+```py
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import time
+
+while True:
+    try:
+        conn = psycopg2.connect(host='localhost', database='fastapi_db', user='postgres', password='postgres', cursor_factory=RealDictCursor)
+        print("database Connection was successfull")
+        cursor = conn.cursor()
+        break
+    except Exception as error:
+        print("database Connection was Faild")
+        print("Error", error)
+        time.sleep(2)
+```
+
+### Make Database Call from within API functions
+ - User the connection cursor to exectue SQL schemas.
+ - To Make database call, it is required to call fetchall() method.
+```py
+@app.get("/posts", tags=['POST'])
+async def get_posts():
+    """Return All Posts"""
+    cursor.execute("""SELECT * FROM posts""")
+    posts = cursor.fetchall()
+    return {"data": posts}
+
 ```
