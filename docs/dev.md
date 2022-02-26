@@ -1,10 +1,8 @@
 ## FastAPI Blog App Dev Documentation
-<hr>
 <br>
 <br>
 
 ## Part - One [Brows Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/885189adc7e261a41a52b3f600ca8c9c71d7c203)
-<hr> 
 
 ### GET & POST
 - Basics of FastAPI
@@ -27,11 +25,8 @@ async def create_post(payload: dict=Body(...)):
     return {"new_post" : "Post Created Successfully"}
 ```
 <br>
-<br>
-<br>
 
 ## Part - Two [Brows Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ce621b2924ed8854e747c504dacbaf272642f795)
-<hr>
 
 ### Stractured Data
 - Basic Data Model using Pydentic lib
@@ -50,8 +45,8 @@ class Post(BaseModel):
     """ Responsible for maping payload Data """
     title: str
     content: str
-    published: bool = True # Assigning Default Value
-    rating: Optional[int] = None # Completely Optional Field
+    published: bool = True
+    rating: Optional[int] = None
 
 @app.post("/create-post", tags=['POST'])
 async def create_post(post:Post):
@@ -59,11 +54,9 @@ async def create_post(post:Post):
     return {"data":"Post Created Successfully"}  
 ```
 <br>
-<br>
-<br>
 
 ## Part - Three [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ba3ea47820f3509700574dfa691a04262a0d1a8a)
-<hr>
+<br>
 
 ### Related API Status Code
 - Import status package from fastapi module
@@ -93,7 +86,6 @@ async def create_post(post: Post):
 ```
 *So that dynamic ```id``` is not replaced by ```latest``` value from the URL.*
 
-<br>
 <br>
 
 ### Return Valid Status code if an object is not found.
@@ -131,11 +123,8 @@ async def get_post(id: int):
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with ID: {id} Not Found")
 ```
 <br>
-<br>
-<br>
 
 ## Part - Four [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/5aee14e85069e49b0af141527e5bd24bcda722aa)
-<hr>
 
 ### Delete Item
 - Receive item ```ID``` to be deleted.
@@ -162,8 +151,6 @@ async def delete_post(id: int):
     my_posts.pop(index)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 ```
-<br>
-<br>
 <br>
 
 ### Update Item
@@ -195,11 +182,8 @@ async def update_post(id: int, post: Post):
     return {"message": post_dict}
 ```
 <br>
-<br>
-<br>
 
 ## Part Five [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/dcabb1c3a94af04b345d9e480a800655b06cde1a) 
-<hr>
 
 ### Re-stracture Project Tree
 - Move The ```main.py``` file into the app folder.
@@ -239,7 +223,7 @@ while True:
 
 ### Make Database Call from within API functions
  - User the connection cursor to exectue SQL schemas.
- - To Make database call, it is required to call fetchall() method.
+ - To Make database call, it is required to call ```fetchall()``` method.
 ```py
 @app.get("/posts", tags=['POST'])
 async def get_posts():
@@ -248,4 +232,65 @@ async def get_posts():
     posts = cursor.fetchall()
     return {"data": posts}
 
+```
+### Get Single Post
+- Alwasy pass user's inputs ```str(id)``` as SQL variable ```%s``` in order to avoid sql injection.
+- Make ```cursor``` to call on database by ```cursor.fetchone()```.
+```python
+@app.get("/posts/{id}", tags=['POST'])
+async def get_post(id: int):
+    """Return Single Post"""
+
+    cursor.execute("""SELECT * FROM posts WHERE id=%s""", (str(id),))
+    post = cursor.fetchone()
+
+    if post:
+        return {"data": post}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post Not-Found"
+        )
+```
+
+### Create schema
+- Write ```INSERT``` SQL schema that needs to be created
+- Add ```RETURNING *``` with the SQL schema to return the whole object once it is created.
+- Remember to Commit changes to the database (N.B: Without ```conn.commit()``` changes wouldn't be applied to the database.)
+
+```python
+@app.post("/posts", status_code=status.HTTP_201_CREATED, tags=['POST'])
+async def create_post(post: Post):
+    """Create Posts"""
+
+    cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
+                   (post.title, post.content, post.published))
+    new_post = cursor.fetchone()
+    conn.commit()
+
+    return {"data": new_post}
+```
+
+### Update Schema
+- Write update schema with SQL variable fields.
+- Call the ```fetchone()``` to make the change.
+- Finally apply changes to the database by calling ```commit()```
+
+```python
+@app.put("/posts/{id}", status_code=status.HTTP_202_ACCEPTED, tags=['POST'])
+async def update_post(id: int, post: Post):
+    """Update a Post with the payload"""
+
+    cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""",
+                   (post.title, post.content, post.published, str(id)))
+    post = cursor.fetchone()
+    conn.commit()
+
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post Not-Found"
+        )
+
+    return {"data": post}
 ```
