@@ -294,3 +294,24 @@ async def update_post(id: int, post: Post):
 
     return {"data": post}
 ```
+
+## Delete Schema
+- Similar to udpated operation but this time ```DELETE``` SQL Schema needs to be passed.
+
+```python
+@app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT, tags=['POST'])
+async def delete_post(id: int):
+    """ Delete Post With The Given Id"""
+
+    cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
+    deleted_post = cursor.fetchone()
+    conn.commit()
+
+    if deleted_post == None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post Not-Found"
+        )
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+```
