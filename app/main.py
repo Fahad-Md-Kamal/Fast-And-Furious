@@ -1,12 +1,18 @@
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import Depends, FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 
+from . import models
+from .database import engine, get_db
+from sqlalchemy.orm import Session
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
 
 
 class Post(BaseModel):
@@ -21,7 +27,7 @@ while True:
         conn = psycopg2.connect(
             host='localhost',
             database='fastapi_db',
-            user='genex',
+            user='postgres',
             password='postgres',
             cursor_factory=RealDictCursor
         )
@@ -44,6 +50,13 @@ async def create_post(post: Post):
     conn.commit()
 
     return {"data": new_post}
+
+
+@app.get("/sqlalchemy", tags=['POST'])
+async def test_posts(db: Session = Depends(get_db)):
+    """Return All Posts"""
+
+    return {"data": "Success"}
 
 
 @app.get("/posts", tags=['POST'])
