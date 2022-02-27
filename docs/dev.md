@@ -193,8 +193,9 @@ async def update_post(id: int, post: Post):
 ```bash
 uvicorn app.main:app --reload
 ```
+<br>
 
-### Connect to the database (e.g: PostGres)
+### Connect to the database (e.g: PostgreSQL)
 Install the Postgres Package
 ```bash
 pip install psycopg2
@@ -204,6 +205,8 @@ pip install psycopg2
 - Import ```RealDictCursor``` from ```psycopg2.extras``` to show the datafield as python dictionary
 - Connect to the database using while loop so that until the db is connected you can run the loop after a certain period.
 - User the ```sleep()``` function to loop connection if fails after a certain period.
+<br>
+
 ```py
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -295,7 +298,7 @@ async def update_post(id: int, post: Post):
     return {"data": post}
 ```
 
-## Delete Schema
+### Delete Schema
 - Similar to udpated operation but this time ```DELETE``` SQL Schema needs to be passed.
 
 ```python
@@ -315,3 +318,80 @@ async def delete_post(id: int):
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 ```
+<br>
+
+## Part Six [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/e7ece9dc533c175223348ad318502ce7060ced28)
+
+### Connect to ORM
+- Install sqlalchemy library
+
+```sh
+pip install sqlalchemy
+```
+
+- Create ```database.py``` file that will be responsible for connecting our project to the database engine.
+- Provide SQL database url ```'postgresql://<username>:<password>@<ip-address/hostname>/<database_name>'```
+- Pass the user to ```create_engine()``` function
+- Now create a session with the engin as bind parameter ```sessionmaker(autocommit=False, autoflush=False, bind=engine)```
+- Make a ```Base``` variable from ```declarative_base()``` since it will be inherited to create all the models of the project.
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+SQLALCHEMY_DATABASE_URL = 'postgresql://postgres:postgres@localhost/fastapi_db'
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+```
+<br>
+
+### Connect database engine to FastApi
+- Create a function at ```database.py``` file called ```get_db()```
+- Create database session using the ```SessionLocal``` variable.
+
+```python
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+```
+- Now in ```main.py``` import ```models```, from ```database.py``` import database session name ```engine``` that we have created using ```sessionmaker()``` function and the ```get_db()``` function
+- Import ```session``` from ```sqlalchemy.orm```
+- Make database tables if not exists by calling the db session (e.g. ```models.Base.metadata.create_all(bind=engine)```) at the beginning of the project
+
+```python
+from . import models
+from .database import engine, get_db
+from sqlalchemy.orm import Session
+
+models.Base.metadata.create_all(bind=engine)
+```
+<br>
+
+### Creating model
+- Create a file named ```model.py``` where all the database models will be
+- Import ```Base``` from the ```database.py``` since it will be inhearited to all the models
+- Import necessary objects from ```sqlalchemy``` library for creating database table.
+<br>
+
+```python
+from .database import Base
+from sqlalchemy import Column, Integer, String, Boolean
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    title = Column(String, nullable=False)
+    content = Column(String, nullable=False)
+    published = Column(Boolean, default=True)
+```
+
+
