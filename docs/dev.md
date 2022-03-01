@@ -507,3 +507,76 @@ async def delete_post(id: int, db: Session = Depends(get_db)):
     
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 ```
+
+
+## Part Eight [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+
+### Schema Model
+- These are the models that inform users about the required input fields of a model.
+- Remove the Post Model from the ```main.py``` file to a new file called ```schemas.py```.
+- Create a base post model that will be inherited for diffrent purposes. **e.g** (create, update, partial update)
+<br>
+
+***N.B:*** Schema Models are similar to Django Forms or Django REST Framework's Serializer Models. They holds the requried user input data fields that the executation requires.
+<br>
+
+```python
+# /schemas.py
+
+from pydantic import BaseModel
+
+class PostBase(BaseModel):
+    """ Responsible for maping Post Object's Data field """
+    title: str
+    content: str
+    published: bool = True
+
+class PostCreate(PostBase):
+    pass
+
+class PostUpdate(PostBase):
+    pass
+```
+<br>
+
+- Now import those to the api functions and use them.
+
+```python
+# /main.py
+
+from . import schemas
+
+def create_post(post: schemas.PostCreate):
+    """ Create Post """
+    ...
+
+def update_post(id: int, updated_post: schemas.PostUpdate):
+    """ Update Post """
+    ...
+
+```
+
+#### Create Response Model
+- Inherit the Base Post Model and add fields that the users could see.
+
+```python
+class Post(PostBase):
+    """ Responsible for Allowing user's what data they can see """
+    id: int
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+```
+
+- Add ```response_model= schemas.Post``` the the url decorator.
+
+```python
+@app.put("/posts/{id}", response_model= schemas.Post)
+```
+<br>
+- **N.B.** For List Response like in ```get_all_posts()``` pass it through ```List[]``` imported from typing
+
+```python
+@app.get("/posts", response_model= List[schemas.Post])
+```
