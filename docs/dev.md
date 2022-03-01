@@ -394,7 +394,7 @@ class Post(Base):
     published = Column(Boolean, default=True)
 ```
 
-## Part Seven [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+## Part Seven [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/d208bba4d967fd2f82c3c18052e5a2961cdded46)
 
 ### **SqlAlchemy CRUD Operations**
 <br>
