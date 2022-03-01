@@ -394,4 +394,116 @@ class Post(Base):
     published = Column(Boolean, default=True)
 ```
 
+## Part Seven [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
 
+### **SqlAlchemy CRUD Operations**
+<br>
+
+***Always pass the db session ```db: Session = Depends(get_db)``` to the parameter to the methods that are going to have database operations.***
+<br>
+<br>
+
+#### Get All Posts
+- Generate raw sql schema on Post model using ```db.query(models.Post)```.
+- To execute, this needs to be trailed by ```.all()```. **e.g.** ```db.query(models.Post).all()```.
+
+```python
+@app.get("/posts", tags=['POST'])
+async def get_posts(db: Session = Depends(get_db)):
+    """ Return All Posts """
+    
+    posts = db.query(models.Post).all()
+    
+    return {"data": posts}
+```
+<br>
+
+#### Get Single Post Detail
+- Make the sql query by using the ```db.query(models.Post)``` and trail it with ```.filter(models.Post.id == id)```.
+- Return the first object from the query set result since, the query will return objects list.
+
+```python
+@app.get("/posts/{id}", tags=['POST'])
+async def get_post(id: int, db: Session = Depends(get_db)):
+    """ Return Single Post """
+    
+    post = db.query(models.Post).filter(models.Post.id == id)
+    
+    if not post.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post Not-Found")
+    
+    return {"data": post.first()}
+```
+<br>
+
+#### Create New Post
+- Create New post object by mapping each modle field to the post data ```models.Post(title=post.title, content=post.content, published=post.published)```
+
+- A simplification of this tiring process is to convert the post data to a ```dict()``` object and pass it by exploding the dict using **```**```** symbles to the dict object. **e.g.** ```models.Post(**post.dict())```
+- Add the post to the database with ```db.add(new_post)```.
+- Commit change to the database ```db.commit()```.
+- Refresh newly created database object ```db.refresh(new_post)```.
+
+```python
+@app.post("/posts", status_code=status.HTTP_201_CREATED, tags=['POST'])
+async def create_post(post: Post, db: Session = Depends(get_db)):
+    """ Create Posts """
+
+    new_post = models.Post(**post.dict())
+    
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+    
+    return {"data": new_post}
+```
+<br>
+
+#### Update Post
+- First get the post detail, similar to single post detail.
+- Now, update the result with the updated_post payload data.
+- Add ```synchronize_session=False``` to the queryset **e.g.** ```post_query.update(updated_post.dict(), synchronize_session=False)```.
+- Commit changes to the database.
+- return the result by executing the generated sql command with ```.first()```.
+
+```python
+@app.put("/posts/{id}", status_code=status.HTTP_202_ACCEPTED, tags=['POST'])
+async def update_post(id: int, updated_post: Post, db: Session = Depends(get_db)):
+    """ Update a Post """
+    
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
+    
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post Not-Found")
+    
+    post_query.update(updated_post.dict(), synchronize_session=False)
+    db.commit()
+    
+    return {"data": post_query.first()}
+```
+<br>
+
+#### Delete Post
+- Similar to single post detail first get the datbase object with the id.
+- Execute ```.delete()``` method.
+- Commit change to the database.
+
+```python
+@app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT, tags=['POST'])
+async def delete_post(id: int, db: Session = Depends(get_db)):
+    """ Delete Post """
+    
+    post = db.query(models.Post).filter(models.Post.id == id)
+    
+    if not post.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post Not-Found")
+    
+    post.delete(synchronize_session=False)
+    db.commit()
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+```
