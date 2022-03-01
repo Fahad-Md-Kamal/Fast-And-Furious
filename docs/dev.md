@@ -509,7 +509,7 @@ async def delete_post(id: int, db: Session = Depends(get_db)):
 ```
 
 
-## Part Eight [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+## Part Eight [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/4430fb1a7d545ba8d348dfa0f3ca240e81332ee4)
 
 ### Schema Model
 - These are the models that inform users about the required input fields of a model.
@@ -579,4 +579,112 @@ class Post(PostBase):
 
 ```python
 @app.get("/posts", response_model= List[schemas.Post])
+```
+
+## Part Nine [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+
+### Creating User
+- Create User Model
+```python
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, nullable=False)
+    email = Column(String, nullable=False, unique=True)
+    username = Column(String, nullable=False, unique=True)
+    password = Column(String, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+```
+
+- Create User Schema Models
+
+- Make email field to ```EmailStr``` to validate email data type. You would be required to install ```email-validator``` package.
+
+```sh
+pip install email-validator
+```
+<br>
+
+**User Schema Models**
+```python
+class UserBase(BaseModel):
+    email: EmailStr
+    username: str
+    password: str
+
+class UserCreate(UserBase):
+    pass
+
+class UserUpdate(UserBase):
+    pass
+
+class UserResponse(BaseModel):
+    """ Responsible for Allowing user's what data they can see """
+    id: int
+    email: EmailStr
+    username: str
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+```
+
+### Password hasing
+
+- Install hasing package. Here we are going to install ```passlib``` and ```bcrypt```
+```sh
+pip install passlib[bcrypt]
+```
+
+- Make hashing utility function for password hasing.
+
+```python
+from passlib.context import CryptContext
+pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+
+def hash_pwd(password:str):
+    """ Make Hash of the password """
+    return pwd_context.hash(password)
+```
+
+- Register User Endpoints
+
+```python
+@app.post("/users", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED, tags=['USER'])
+async def create_post(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
+    """ Register User """
+    # Validate if user exists with the given username or email
+    user = db.query(models.User).filter(
+        (models.User.email == user_data.email) |
+        (models.User.username == user_data.username)
+    )
+
+    if user.first():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"User with this Email/ Username already exists.")
+    
+    # Make hash of the password withe the help of utility function.
+    hashed_password = hash_pwd(user_data.password)
+    user_data.password = hashed_password
+
+    user = models.User(**user_data.dict())
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return user
+```
+
+- User Detail Endpoints
+```python
+@app.get('/user/{id}', response_model= schemas.UserResponse, tags=['USER'])
+async def get_user(id:int, db: Session=Depends(get_db)):
+    """ Get User Detail """
+    user = db.query(models.User).filter(models.User.id == id)
+
+    if not user.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with ID: '{id}' Not-Found")
+    return user.first()
+
 ```
