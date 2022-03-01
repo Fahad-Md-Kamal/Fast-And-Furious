@@ -580,8 +580,10 @@ class Post(PostBase):
 ```python
 @app.get("/posts", response_model= List[schemas.Post])
 ```
+<br>
 
 ## Part Nine [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ca8892db619d68040ade1a4bbd539180c0333999)
+
 
 ### Creating User
 - Create User Model
@@ -687,4 +689,115 @@ async def get_user(id:int, db: Session=Depends(get_db)):
                             detail=f"User with ID: '{id}' Not-Found")
     return user.first()
 
+```
+
+## Part Ten [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+
+### Modularizing the Project
+- Create A folder called routers
+- Make two files module specific files and move the related urls from the ```main.py```.
+
+**```post.py``` for post's APIs**
+
+```python
+# routers/post.py
+
+from typing import List
+from fastapi import (
+    Depends,
+    Response,
+    status,
+    HTTPException,
+    APIRouter
+)
+from sqlalchemy.orm import Session
+
+from .. import models, schemas
+from ..database import engine, get_db
+
+models.Base.metadata.create_all(bind=engine)
+
+router = APIRouter()
+
+@router.post("posts/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
+async def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
+    """ Create Posts Code """
+
+@router.get("posts/", response_model=List[schemas.Post])
+async def get_posts(db: Session = Depends(get_db)):
+    """ Return All Posts  Code """
+
+@router.get("posts/{id}", response_model=schemas.Post)
+async def get_post(id: int, db: Session = Depends(get_db)):
+    """ Return Single Post Code """
+
+@router.delete('posts/{id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_post(id: int, db: Session = Depends(get_db)):
+    """ Delete Post Code """
+
+@router.put("posts/{id}", response_model=schemas.Post, status_code=status.HTTP_202_ACCEPTED)
+async def update_post(id: int, updated_post: schemas.PostUpdate, db: Session = Depends(get_db)):
+    """ Update a Post Code """
+```
+<br>
+
+**```user.py``` for user's APIs**
+
+```python
+# routers/user.py
+
+from fastapi import (
+    Depends,
+    status,
+    HTTPException,
+    APIRouter
+)
+from sqlalchemy.orm import Session
+from .. import models, schemas, utils
+from ..database import get_db
+
+router = APIRouter()
+
+@router.post("/users", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
+async def create_post(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
+    """ Register User Code """
+
+@router.get('/users/{id}', response_model=schemas.UserResponse)
+async def get_user(id: int, db: Session = Depends(get_db)):
+    """ Get User Detail Code"""
+```
+<br>
+
+- Resolve errors
+- Instantiate ```APIRouter``` from ```fastapi``` module
+- Replace ```@app``` decorator to ```@router``` decorator
+<br>
+
+- Import and Call those routers to the ```main.py```
+
+```python
+from fastapi import FastAPI
+from .routers import post, user
+
+from . import models
+from .database import engine
+
+models.Base.metadata.create_all(bind=engine)
+
+app = FastAPI()
+
+app.include_router(post.router)
+app.include_router(user.router)
+```
+<br>
+
+- To Easily seperate routes to different groups add ```Tags``` into the routers of the moduels and url ```prefixe="/users"``` so that each router doesn't needs to be decleare it.
+
+```python
+router = APIRouter(prefix="/users", tags=['USER'])
+
+# Prefix User is removed since it will be found with the api url.
+@router.get('/{id}', response_model=schemas.UserResponse)
+async def get_user(id: int, db: Session = Depends(get_db)):
+    """ Get User Detail """
 ```
