@@ -840,7 +840,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     
     to_encode.update({"exp": expire})
     token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -890,4 +890,62 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Ses
     access_token = oauth2.create_access_token(data={'user_id': user.id})
 
     return {"access_token": access_token, "token_type": "bearer"}
+```
+
+
+## Part Twelve [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+
+### Token Validation
+
+- Create Schema Model for token payload data.
+
+```python
+# /schemas.py
+
+class Token(BaseModel):
+    access_token : str
+    token_type : str
+
+class TokenData(BaseModel):
+    id: Optional[str] = None
+    created_at: Optional[datetime]
+```
+
+
+- Create Utitlity function to validate authentication token.
+
+```python
+# /oauth2.py
+
+def verify_access_token(token: str, credentials_expception):
+    """Verify JWT access token and return user id"""
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        id: str = payload.get("user_id")
+        if not id:
+            raise credentials_expception
+        
+        token_data = schemas.TokenData(id=id)
+        return token_data
+    except JWTError:
+        raise credentials_expception
+
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    """Setup HTTP exception Error for the token Validation and return current uer data"""
+    credentials_expception = HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=f"Could not validate credentials",
+        headers={"www-Authenticate": "Bearer"}
+    )
+
+    return verify_access_token(token, credentials_expception)
+```
+
+- Now secure API Endpoints by adding ```, user_id: int = Depends(oauth2.get_current_user)```
+
+```python
+async def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
+    """.... all logic goes here ...."""
 ```
