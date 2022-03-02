@@ -801,3 +801,93 @@ router = APIRouter(prefix="/users", tags=['USER'])
 async def get_user(id: int, db: Session = Depends(get_db)):
     """ Get User Detail """
 ```
+
+
+## Part Eleven [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+
+### User Authentication
+- Create new route called ```auth.py```
+- Create API Endpoint
+- Import ```OAuth2PasswordRequestForm``` for taking user credentials.
+- Pass it as schema into the function's params.
+
+```python
+async def login(user_credentials: OAuth2PasswordRequestForm = Depends()):
+    """Login API Endpoint"""
+```
+
+- Create Utility function to verify password hash.
+
+```python
+# /utils.py
+
+def verify_pwd(plain_password, hashed_password):
+    """ Validate user password """
+    return pwd_context.verify(plain_password, hashed_password)
+```
+<br>
+
+- Make Hash Generating Utility Function.
+```python
+# /oauth2.py
+
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+
+SECRET_KEY = "super-scret-key"
+ALGORITHM = "hashing-algorithem"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    to_encode.update({"exp": expire})
+    token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    return token
+```
+<br>
+
+- Now call the token generating function and pass the data as parameter that needs to be encrypted. **e.g.** ```oauth2.create_access_token(data={'user_id': user.id})```
+```python
+# /auth.py
+
+from fastapi import (
+    Depends,
+    status,
+    HTTPException,
+    APIRouter
+)
+from fastapi.security.oauth2 import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+
+from .. import models, utils, oauth2
+from ..database import get_db
+
+router = APIRouter(
+    prefix="/auth",
+    tags=["AUTH"]
+)
+
+@router.post('/login')
+async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """User Login with email or username"""
+
+    user = db.query(models.User).filter(
+        (models.User.email == user_credentials.username) |
+        (models.User.username == user_credentials.username)
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Invalid Credentials")
+
+    if not utils.verify_pwd(user_credentials.password, user.password):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Invalid Credentials")
+
+    access_token = oauth2.create_access_token(data={'user_id': user.id})
+
+    return {"access_token": access_token, "token_type": "bearer"}
+```

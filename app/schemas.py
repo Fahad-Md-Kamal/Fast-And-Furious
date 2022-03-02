@@ -22,11 +22,6 @@ class Post(PostBase):
         orm_mode = True
 
 
-# class UserBase(BaseModel):
-#     email = EmailStr
-#     username = str
-#     password = str
-
 class UserBase(BaseModel):
     email: EmailStr
     username: str
