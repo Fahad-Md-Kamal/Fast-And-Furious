@@ -20,7 +20,7 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
-async def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
+async def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """ Create Posts """
 
     new_post = models.Post(**post.dict())
@@ -33,7 +33,7 @@ async def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), u
 
 
 @router.get("/", response_model=List[schemas.Post])
-async def get_posts(db: Session = Depends(get_db)):
+async def get_posts(db: Session = Depends(get_db), current_user: schemas.UserResponse = Depends(oauth2.get_current_user)):
     """ Return All Posts """
 
     posts = db.query(models.Post).all()
@@ -42,7 +42,7 @@ async def get_posts(db: Session = Depends(get_db)):
 
 
 @router.get("/{id}", response_model=schemas.Post)
-async def get_post(id: int, db: Session = Depends(get_db)):
+async def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """ Return Single Post """
 
     post = db.query(models.Post).filter(models.Post.id == id)
@@ -55,7 +55,7 @@ async def get_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
-async def delete_post(id: int, db: Session = Depends(get_db)):
+async def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """ Delete Post """
 
     post = db.query(models.Post).filter(models.Post.id == id)
@@ -71,7 +71,7 @@ async def delete_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{id}", response_model=schemas.Post, status_code=status.HTTP_202_ACCEPTED, tags=['POST'])
-async def update_post(id: int, updated_post: schemas.PostUpdate, db: Session = Depends(get_db)):
+async def update_post(id: int, updated_post: schemas.PostUpdate, db: Session = Depends(get_db), current_user: schemas.UserResponse = Depends(oauth2.get_current_user)):
     """ Update a Post """
 
     post_query = db.query(models.Post).filter(models.Post.id == id)

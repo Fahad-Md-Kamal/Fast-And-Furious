@@ -949,3 +949,24 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 async def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     """.... all logic goes here ...."""
 ```
+
+- Return User model with token validation
+```python
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)) -> schemas.UserResponse:
+    """Setup HTTP exception Error for the token Validation and return current uer data"""
+    credentials_expception = HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=f"Could not validate credentials",
+        headers={"www-Authenticate": "Bearer"}
+    )
+    token = verify_access_token(token, credentials_expception)
+    user = db.query(models.User).filter(models.User.id == token.id).first()
+
+    return user
+```
+- Now guard the routs that needs to be guarded by add ```current_user: int = Depends(oauth2.get_current_user)``` with the gateway method params
+```python
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
+async def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    """ .... """
+```
