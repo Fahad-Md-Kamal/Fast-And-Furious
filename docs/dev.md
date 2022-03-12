@@ -1009,3 +1009,45 @@ if post.owner_id != current_user.id:
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not authorized to perform the action")
 ```
 
+
+## Part Tweleve [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+
+### Show logged in user owned posts
+- Add ```filter(models.Post.owner_id == current_user.id)``` within the sql query.
+
+```python
+db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
+```
+### Show post owners detail information with the post
+- Import ```relationship()``` from ```sqlalchemy.orm```
+- Add a filed to the Post model ```owner = relationship("User")```
+- Add a filed to Schema model of the user ```owner: UserResponse```
+
+```python
+# /models.py
+class Post(Base):
+    __tablename__ = "posts"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    title = Column(String, nullable=False)
+    content = Column(String, nullable=False)
+    published = Column(Boolean, default=True)
+    created_at = Column(TIMESTAMP(timezone=True),
+                        nullable=False, server_default=text('now()'))
+    owner_id = Column(Integer, ForeignKey( "users.id", ondelete="CASCADE"), nullable=False)
+
+    owner = relationship("User")
+```
+
+```python
+# schemas.py
+class Post(PostBase):
+    """ Responsible for Allowing user's what data they can see """
+    id: int
+    owner_id: int
+    created_at: datetime
+    owner: UserResponse
+
+    class Config:
+        orm_mode = True
+```

@@ -2,28 +2,6 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 
-class PostBase(BaseModel):
-    """ Responsible for maping Post Object's Data field """
-    title: str
-    content: str
-    published: bool = True
-
-class PostCreate(PostBase):
-    pass
-
-class PostUpdate(PostBase):
-    pass
-
-class Post(PostBase):
-    """ Responsible for Allowing user's what data they can see """
-    id: int
-    owner_id: int
-    created_at: datetime
-
-    class Config:
-        orm_mode = True
-
-
 class UserBase(BaseModel):
     email: EmailStr
     username: str
@@ -34,7 +12,6 @@ class UserCreate(UserBase):
 
 class UserUpdate(UserBase):
     pass
-
 
 class UserResponse(BaseModel):
     """ Responsible for Allowing user's what data they can see """
@@ -53,3 +30,26 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     id: Optional[str] = None
     created_at: Optional[datetime]
+
+class PostBase(BaseModel):
+    """ Responsible for maping Post Object's Data field """
+    title: str
+    content: str
+    published: bool = True
+
+class PostCreate(PostBase):
+    pass
+
+class PostUpdate(PostBase):
+    pass
+
+class Post(PostBase):
+    """ Responsible for Allowing user's what data they can see """
+    id: int
+    owner_id: int
+    created_at: datetime
+    owner: UserResponse
+
+    class Config:
+        orm_mode = True
+
