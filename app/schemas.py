@@ -17,6 +17,7 @@ class PostUpdate(PostBase):
 class Post(PostBase):
     """ Responsible for Allowing user's what data they can see """
     id: int
+    owner_id: int
     created_at: datetime
 
     class Config:

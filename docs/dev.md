@@ -803,7 +803,7 @@ async def get_user(id: int, db: Session = Depends(get_db)):
 ```
 
 
-## Part Eleven [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/2421b49d289cca531d5dc746c673dc5423a6e193)
+## Part Eleven [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/34cddf6ff0003e54bd62296fcf80da10a9c0cbe4)
 
 ### User Authentication
 - Create new route called ```auth.py```
@@ -970,3 +970,42 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 async def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """ .... """
 ```
+
+
+## Part Eleven [Brow Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/)
+
+### Tag Users to post
+- Add new column to the ```Post``` Model
+
+```python
+class Post(Base):
+    __tablename__ = "posts"
+
+    """ .. Other Fields .. """
+    owner_id = Column(Integer, ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
+```
+
+- Modify Api functions to attach user id to post field ```models.Post(owner_id=current_user.id, **post.dict())```
+```python
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
+async def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: schemas.UserResponse = Depends(oauth2.get_current_user)):
+    """ Create Posts """
+
+    new_post = models.Post(owner_id=current_user.id, **post.dict())
+
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+
+    return new_post
+```
+
+- Prevent users to UPDATE or DELETE functions someone elses post.
+
+```python
+# PUT and DELETE functions will validate.
+if post.owner_id != current_user.id:
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not authorized to perform the action")
+```
+
