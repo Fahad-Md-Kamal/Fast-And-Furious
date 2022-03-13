@@ -1,62 +1,4 @@
-## FastAPI Blog App Dev Documentation
-<br>
-<br>
-
-## Part - One [Brows Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/885189adc7e261a41a52b3f600ca8c9c71d7c203)
-
-### GET & POST
-- Basics of FastAPI
-- Basic GET and POST request
-
-```python
-from fastapi import FastAPI
-from fastapi.params import Body
-
-
-app = FastAPI()
-
-@app.get("/", tags=['POST'])
-async def home_view():
-    return {"message": "In the name of Allah, I'm beginning"}
-
-@app.post("/create-post", tags=['POST'])
-async def create_post(payload: dict=Body(...)):
-
-    return {"new_post" : "Post Created Successfully"}
-```
-<br>
-
-## Part - Two [Brows Files](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ce621b2924ed8854e747c504dacbaf272642f795)
-
-### Stractured Data
-- Basic Data Model using Pydentic lib
-- Making Optional model field
-- Assining Default value to the model fild.
-
-```python
-from typing import Optional
-from fastapi import FastAPI
-from pydantic import BaseModel
-
-
-app = FastAPI()
-
-class Post(BaseModel):
-    """ Responsible for maping payload Data """
-    title: str
-    content: str
-    published: bool = True
-    rating: Optional[int] = None
-
-@app.post("/create-post", tags=['POST'])
-async def create_post(post:Post):
-    print(post.dict())
-    return {"data":"Post Created Successfully"}  
-```
-<br>
-
-## Part - Three [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ba3ea47820f3509700574dfa691a04262a0d1a8a)
-<br>
+<!-- ## Part - Three [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/ba3ea47820f3509700574dfa691a04262a0d1a8a)
 
 ### Related API Status Code
 - Import status package from fastapi module
@@ -122,8 +64,8 @@ async def get_post(id: int):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with ID: {id} Not Found")
 ```
-<br>
-
+<br> -->
+<!-- 
 ## Part - Four [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/5aee14e85069e49b0af141527e5bd24bcda722aa)
 
 ### Delete Item
@@ -181,7 +123,7 @@ async def update_post(id: int, post: Post):
     my_posts[index] = post_dict
     return {"message": post_dict}
 ```
-<br>
+<br> -->
 
 ## Part Five [Brows File](https://github.com/Fahad-Md-Kamal/Fast-And-Furious/tree/dcabb1c3a94af04b345d9e480a800655b06cde1a) 
 
