@@ -993,3 +993,26 @@ class Post(PostBase):
     class Config:
         orm_mode = True
 ```
+
+## Pagination (limit, offset) and Query Parameter
+
+- Provide paramters in function's arguments
+- Set default values ``limit: int = 10`` and ``skip: int = 0``
+- Set Optional paramters such as ``search: Optional[str] = ""``
+- Stracture the Statement as ``posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()``
+
+***Complete Code***
+```python
+@router.get("/", response_model=List[schemas.Post])
+async def get_posts(
+    db: Session = Depends(get_db),
+    current_user: schemas.UserResponse = Depends(oauth2.get_current_user),
+    limit: int = 10, 
+    skip: int = 0, 
+    search: Optional[str] = ""
+    ):
+    """ Return All Posts """
+    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+
+    return posts
+```

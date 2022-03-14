@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import (
     Depends,
     Response,
@@ -30,13 +30,18 @@ async def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), c
     db.refresh(new_post)
 
     return new_post
-
+    
 
 @router.get("/", response_model=List[schemas.Post])
-async def get_posts(db: Session = Depends(get_db), current_user: schemas.UserResponse = Depends(oauth2.get_current_user)):
+async def get_posts(
+    db: Session = Depends(get_db),
+    current_user: schemas.UserResponse = Depends(oauth2.get_current_user),
+    limit: int = 10, 
+    skip: int = 0, 
+    search: Optional[str] = ""
+    ):
     """ Return All Posts """
-
-    posts = db.query(models.Post).all()
+    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
 
     return posts
 
