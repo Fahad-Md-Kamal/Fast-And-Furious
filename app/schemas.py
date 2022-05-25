@@ -46,12 +46,21 @@ class PostUpdate(PostBase):
 class Post(PostBase):
     """ Responsible for Allowing user's what data they can see """
     id: int
-    owner_id: int
     created_at: datetime
+    owner_id: int
     owner: UserResponse
 
     class Config:
         orm_mode = True
+
+
+class PostOut(BaseModel):
+    Post: Post
+    votes: int
+
+    class Config:
+        orm_mode = True
+
 
 class Vote(BaseModel):
     post_id: int
