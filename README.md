@@ -1,7 +1,7 @@
 # Building Data Science Application with FastAPI.
 
 ## Section 1 : Introduction to Python and FastAPI
-<hr/>
+<br />
 
 ### Chapter 1 : Python Development Environment Setup
 
@@ -35,7 +35,6 @@
 <br />
 
 ## Section 2 : Build and Deploy a complete web backend with FastAPI
-<hr/>
 <br />
 
 ### Chapter 6 : Databases and Asynchronous ORMs
@@ -50,7 +49,6 @@
 <br />
 
 ## Section 3 : Build a Data Science API with Python and FastAPI
-<hr/>
 <br />
 
 ### Chapter 11 : Introduction to NumPy and pandas
