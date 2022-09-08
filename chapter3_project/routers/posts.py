@@ -5,7 +5,10 @@ from fastapi import APIRouter, HTTPException, status
 from chapter3_project.models.post import Post, PostCreate 
 from chapter3_project.db import db
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/posts", 
+    tags=["posts"]
+)
 
 
 @router.get("/")

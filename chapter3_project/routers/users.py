@@ -5,7 +5,10 @@ from fastapi import APIRouter, HTTPException, status
 from chapter3_project.models.user import User, UserCreate
 from chapter3_project.db import db
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/users", 
+    tags=["users"]
+)
 
 
 @router.get("/")
