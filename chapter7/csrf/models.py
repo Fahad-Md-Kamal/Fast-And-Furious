@@ -3,7 +3,7 @@ from pydantic import BaseModel, EmailStr, Field
 from tortoise.models import Model
 from tortoise import fields, timezone
 
-from chapter7.authentication.password import generate_token
+from chapter7.csrf.password import generate_token
 
 
 def get_expiration_date(duration_seconds: int = 86400) -> datetime:
