@@ -60,6 +60,14 @@
 ### Chapter 14 : Implement a Real-Time Face Detection System Using Websockets with FastAPI and OpenCV
 
 
+<br>
+<br>
+
+## COMMANDS
+#### Run pytest
+```
+pytest -s  -v chapter9/chapter9_app_post_test.py
+```
 
 
 

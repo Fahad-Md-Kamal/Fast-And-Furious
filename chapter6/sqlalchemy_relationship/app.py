@@ -4,7 +4,7 @@ from databases import Database
 from fastapi import Depends, FastAPI, HTTPException, Query, status
 
 from database import get_database, sqlalchemy_engine
-from models import (
+from chapter6.sqlalchemy_relationship.models import (
     comments,
     metadata,
     posts,

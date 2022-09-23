@@ -2,7 +2,7 @@ from bson import ObjectId, errors
 from fastapi import Depends, FastAPI, HTTPException, Query, status
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-from mongodb_relationship.models import (
+from chapter6.mongodb_relationship.models import (
     CommentCreate,
     CommentBase,
     PostDB,
