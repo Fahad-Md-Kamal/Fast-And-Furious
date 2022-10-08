@@ -96,7 +96,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
       socket.close();
     }
 
-    const deviceId = cameraSelect.selectedOptions[0];
+    const deviceId = cameraSelect.selectedOptions[0].value;
+    // const deviceId = cameraSelect.selectedOptions[0];
     socket = startFaceDetection(video, canvas, deviceId);
   });
 
