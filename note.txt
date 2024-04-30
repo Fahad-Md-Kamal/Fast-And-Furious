@@ -1,0 +1,6 @@
+
+# get poetry virtual env information
+poetry env info
+
+# setup environment inside project folder
+poetry config virtualenvs.in-project true

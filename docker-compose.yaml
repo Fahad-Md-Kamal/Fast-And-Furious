@@ -1,0 +1,46 @@
+
+services:
+
+  web:
+    container_name: web
+    build: ./src
+    command: ./scripts/startApi.sh 
+    volumes:
+      - ./src:/usr/src/app
+    ports:
+      - 8000:8000
+    depends_on:
+      - postgresdb
+    networks:
+      - nimbus_network
+
+  postgresdb:
+    container_name: postgres_db
+    image: postgres
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=nimbus
+    networks:
+      - nimbus_network
+    volumes:
+      - ./volume-data/postgres:/var/lib
+
+  adminer:
+    image: adminer
+    container_name: nimbus_dbviewer
+    restart: always
+    ports:
+      - "8083:8080"
+    networks:
+      - nimbus_network
+      # View Database with adminer
+      # System: PostgresSQL 
+      # Server: postgresdb 
+      # Username: postgres
+      # Password: postgres
+
+networks:
+  nimbus_network:
